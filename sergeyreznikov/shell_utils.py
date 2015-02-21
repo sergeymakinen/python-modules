@@ -119,7 +119,7 @@ def retrieve_file(url, file_path=None, user_agent=None, cookies=None, referer=No
         file_obj = open(file_path, 'wb')
         while True:
             resp_buffer = resp.read(8192)
-            if buffer is None:
+            if len(resp_buffer) == 0:
                 break
 
             file_obj.write(resp_buffer)
