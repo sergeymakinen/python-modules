@@ -13,6 +13,7 @@ from datetime import datetime
 
 
 def error(message, code=1):
+    sys.stdout.flush()
     print(message, file=sys.stderr)
     sys.exit(code)
 
