@@ -65,7 +65,7 @@ def get_keychain_password(account):
 def input_bool(question, default=None):
     if default is None:
         question += ' [y/n]? '
-    if default:
+    elif default:
         question += ' [Y/n]? '
     else:
         question += ' [y/N]? '
