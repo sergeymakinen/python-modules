@@ -2,7 +2,6 @@ from __future__ import print_function, unicode_literals
 
 import codecs
 import dateutil.tz
-import ntpath
 import os
 import re
 import subprocess
@@ -10,6 +9,38 @@ import sys
 import urllib2
 from Cookie import SimpleCookie
 from datetime import datetime
+
+WIN32_BAD_NAMES = [
+    'aux',
+    'com1',
+    'com2',
+    'com3',
+    'com4',
+    'com5',
+    'com6',
+    'com7',
+    'com8',
+    'com9',
+    'con',
+    'lpt1',
+    'lpt2',
+    'lpt3',
+    'lpt4',
+    'lpt5',
+    'lpt6',
+    'lpt7',
+    'lpt8',
+    'lpt9',
+    'nul',
+    'prn'
+]
+
+WIN32_X_EXTS = [
+    '.com',
+    '.exe',
+    '.bat',
+    '.cmd'
+]
 
 
 def error(message, code=1):
@@ -24,7 +55,7 @@ def find_executable(name, shell=False):
     if sys.platform == 'win32':
         if os.curdir not in pathes:
             pathes.insert(0, os.curdir)
-        exts = ['.com', '.exe', '.bat', '.cmd']
+        exts = WIN32_X_EXTS
         if shell:
             exts += [ext for ext in os.environ.get('PATHEXT', '').lower().split(os.pathsep) if ext not in exts]
         if os.path.splitext(name)[1].lower() not in exts:
@@ -33,7 +64,7 @@ def find_executable(name, shell=False):
     for path in pathes:
         for name in names:
             probe_path = os.path.join(path, name)
-            if os.path.isfile(probe_path):
+            if os.path.isfile(probe_path) and os.access(probe_path, os.X_OK):
                 return probe_path
 
 
@@ -91,7 +122,7 @@ def log(path, message):
 
 def realpath(path, executable=False, shell=False):
     if executable:
-        if os.path.isfile(path):
+        if os.path.isfile(path) and os.access(path, os.X_OK):
             return os.path.realpath(path)
 
         exec_path = find_executable(path, shell)
@@ -138,30 +169,7 @@ def safe_file_name(name, posix=None):
         return re.sub(r'[\x00/]', '', name)
     else:
         name = re.sub(r'[\x00-\x1f<>:"/\|?*]', '', name).rstrip('. ')[:255]
-        if ntpath.splitext(name)[0].lower() in [
-            'aux',
-            'com1',
-            'com2',
-            'com3',
-            'com4',
-            'com5',
-            'com6',
-            'com7',
-            'com8',
-            'com9',
-            'con',
-            'lpt1',
-            'lpt2',
-            'lpt3',
-            'lpt4',
-            'lpt5',
-            'lpt6',
-            'lpt7',
-            'lpt8',
-            'lpt9',
-            'nul',
-            'prn'
-        ]:
+        if os.path.splitext(name)[0].lower() in WIN32_BAD_NAMES:
             name = ''
         return name
 
