@@ -48,8 +48,8 @@ def format_size(size):
     return '{0:.2f}'.format(size).rstrip('0').rstrip('.') + ' ' + unit
 
 
-def get_keychain_password(account):
-    output = subprocess.Popen(['security', 'find-generic-password', '-g', '-a', account],
+def get_keychain_password(service, account):
+    output = subprocess.Popen(['security', 'find-generic-password', '-g', '-s', service, '-a', account],
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[1]
     matches = re.search(r'^password: (?:0x([0-9A-F]+)\s*)?"(.*)"$', output)
     if matches:
@@ -166,10 +166,10 @@ def safe_file_name(name, posix=None):
         return name
 
 
-def set_keychain_password(account, service, password, label=None, prompt=False):
+def set_keychain_password(service, account, password, label=None, prompt=False):
     if label is None:
-        label = '{0} {1}'.format(account, service)
-    cmd = ['security', 'add-generic-password', '-a', account, '-s', service, '-w', password, '-l', label]
+        label = '{0} {1}'.format(service, account)
+    cmd = ['security', 'add-generic-password', '-s', service, '-a', account, '-w', password, '-l', label]
     if prompt:
         cmd += ['-T', '']
     subprocess.check_call(cmd)
