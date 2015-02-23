@@ -7,8 +7,10 @@ import re
 import subprocess
 import sys
 import urllib2
+from calendar import timegm
 from Cookie import SimpleCookie
 from datetime import datetime
+from time import gmtime
 
 WIN32_BAD_NAMES = [
     'aux',
@@ -192,6 +194,10 @@ def strftime(format, timestamp=None, local=True):
         return datetime.now(tz).strftime(format)
     else:
         return datetime.fromtimestamp(timestamp, tz).strftime(format)
+
+
+def timestamp():
+    return timegm(gmtime())
 
 
 def touch(path, times=None):

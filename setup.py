@@ -3,6 +3,7 @@
 from distutils.core import setup
 
 setup(name='sergeyreznikov',
+      version='1.0',
       description='Sergey Reznikov Python Modules',
       license='GNU LGPL v2.1',
       author='Sergey Reznikov',
