@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals
 
 import codecs
+import cookielib
 import dateutil.tz
 import os
 import re
@@ -8,9 +9,9 @@ import subprocess
 import sys
 import urllib2
 from calendar import timegm
-from Cookie import SimpleCookie
 from datetime import datetime
 from time import gmtime
+from urlparse import urlparse
 
 WIN32_BAD_NAMES = [
     'aux',
@@ -134,20 +135,52 @@ def realpath(path, executable=False, shell=False):
     return os.path.realpath(os.path.expandvars(os.path.expanduser(path)))
 
 
-def retrieve_file(url, file_path=None, user_agent=None, cookies=None, referer=None, xhr=False):
-    opener = urllib2.build_opener()
+def retrieve_file(url, file_path=None, user_agent=None, cookies=None, referer=None, xhr=False, include_metadata=False):
+    cookie_jar = cookielib.CookieJar()
+    if cookies is not None:
+        domain = urlparse(url).netloc
+        for cookie in cookies:
+            cookie_params = {
+                'version': None,
+                'name': cookie,
+                'port': None,
+                'port_specified': False,
+                'domain': domain,
+                'domain_specified': False,
+                'domain_initial_dot': False,
+                'path': '/',
+                'path_specified': False,
+                'secure': False,
+                'expires': None,
+                'discard': False,
+                'comment': None,
+                'comment_url': None,
+                'rest': {},
+                'rfc2109': False
+            }
+            if isinstance(cookies[cookie], dict):
+                cookie_params.update(cookies[cookie])
+            else:
+                cookie_params['value'] = cookies[cookie]
+            cookie_jar.set_cookie(cookielib.Cookie(**cookie_params))
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
     if user_agent is not None:
         opener.addheaders = [('User-Agent', user_agent)]
-    if cookies:
-        simple_cookie = SimpleCookie()
-        for cookie in cookies:
-            simple_cookie[str(cookie)] = cookies[cookie]
-        opener.addheaders.append(('Cookie', simple_cookie.output(header='', sep=';')[1:]))
     if referer is not None:
         opener.addheaders.append(('Referer', referer))
     if xhr:
         opener.addheaders.append(('X-Requested-With', 'XMLHttpRequest'))
     resp = opener.open(url)
+    if include_metadata:
+        result = {
+            'url': resp.geturl(),
+            'status_code': resp.getcode(),
+            'headers': []
+        }
+        for header in resp.info().headers:
+            result['headers'].append(tuple([value.strip() for value in header.split(':', 1)]))
+    else:
+        result = None
     if file_path is not None:
         file_obj = open(file_path, 'wb')
         while True:
@@ -159,9 +192,12 @@ def retrieve_file(url, file_path=None, user_agent=None, cookies=None, referer=No
         file_obj.close()
         resp.close()
     else:
-        content = resp.read()
+        if include_metadata:
+            result['content'] = resp.read()
+        else:
+            result = resp.read()
         resp.close()
-        return content
+    return result
 
 
 def safe_file_name(name, posix=None):
