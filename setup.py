@@ -1,13 +1,20 @@
-#!/usr/bin/env python
+from setuptools import setup
 
-from distutils.core import setup
-
-setup(name='sergeyreznikov',
-      version='1.0',
-      description='Sergey Reznikov Python Modules',
-      license='GNU LGPL v2.1',
-      author='Sergey Reznikov',
-      author_email='sergey@sergeyreznikov.com',
-      url='https://github.com/sergeyreznikov/python-modules',
-      packages=['sergeyreznikov']
-      )
+setup(name='sergeymakinen',
+      version='1.1.0b1',
+      description='Sergey Makinen Python modules',
+      license='MIT',
+      author='Sergey Makinen',
+      author_email='sergey@makinen.ru',
+      url='https://github.com/sergeymakinen/python-modules',
+      packages=['sergeymakinen'],
+      classifiers=[
+            'Development Status :: 4 - Beta',
+            'Intended Audience :: Developers',
+            'Topic :: Software Development :: Libraries',
+            'License :: OSI Approved :: MIT License',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.2',
+      ],
+      keywords='sergeymakinen library development',
+      install_requires=['python-dateutil>=2.3'])
