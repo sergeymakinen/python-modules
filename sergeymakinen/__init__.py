@@ -2,8 +2,8 @@
 Different functions I often use in my public and private scripts
 """
 
-__version__ = '1.1'
-__author__ = 'Sergey Reznikov <sergey@sergeymakinen.com>'
-__license__ = 'GNU LGPL v2.1'
+__version__ = '1.1.0b2'
+__author__ = 'Sergey Makinen <sergey@makinen.ru>'
+__license__ = 'MIT'
 
 from . import shell_utils

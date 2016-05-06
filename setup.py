@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='sergeymakinen',
-      version='1.1.0b1',
+      version='1.1.0b2',
       description='Sergey Makinen Python modules',
       license='MIT',
       author='Sergey Makinen',

@@ -1,4 +1,5 @@
 import http.cookiejar
+import json
 import os
 import re
 import subprocess
@@ -6,6 +7,8 @@ import sys
 import urllib.parse
 import urllib.request
 from calendar import timegm
+from collections import OrderedDict
+from configparser import ConfigParser
 from datetime import datetime
 from time import gmtime
 
@@ -67,7 +70,8 @@ def exec_file(path, globals=None, locals=None):
         globals = sys._getframe(1).f_globals
     if locals is None:
         locals = sys._getframe(1).f_locals
-    exec(compile(open(path, 'r').read(), path, 'exec'), globals, locals)
+    with open(path, 'r') as file_obj:
+        exec(compile(file_obj.read(), path, 'exec'), globals, locals)
 
 
 def find_executable(name, shell=False):
@@ -127,14 +131,21 @@ def get_keychain_password(service, account):
             return string_password
 
 
-def import_config(file_name=None, suffix='.ini', osx_domain='com.sergeymakinen', python_config_globals=None):
+def import_config(file_name=None, suffix='.ini', osx_domain='ru.makinen', python_config_globals=None):
+    """
+    :param str file_name: file_name
+    :param str suffix: suffix
+    :param str osx_domain: osx_domain
+    :param dict python_config_globals: python_config_globals
+    :return OrderedDict: OrderedDict
+    """
     if file_name is None:
         if not hasattr(sys.modules['__main__'], '__file__'):
             raise ConfigError("can't guess a file_name parameter")
         file_name = os.path.splitext(os.path.basename(sys.modules['__main__'].__file__))[0]
     file_name = os.path.normpath(file_name)
     probe_file_names = []
-    if all(sep not in file_name for sep in [os.path.sep, os.path.altsep]):
+    if all(sep not in file_name for sep in [os.path.sep, str(os.path.altsep)]):
         if hasattr(sys.modules['__main__'], '__file__'):
             probe_file_name = os.path.join(os.path.dirname(sys.modules['__main__'].__file__), file_name + suffix)
             if probe_file_name != sys.modules['__main__'].__file__:
@@ -156,7 +167,19 @@ def import_config(file_name=None, suffix='.ini', osx_domain='com.sergeymakinen',
         probe_file_names.append(os.path.abspath(file_name))
     for path in probe_file_names:
         if os.path.isfile(path):
-            return
+            if suffix == '.ini':
+                parser = ConfigParser()
+                parser.read(path, 'utf-8')
+                return parser._sections
+            elif suffix == '.json':
+                with open(path, 'r') as file_obj:
+                    return json.load(file_obj, object_hook=OrderedDict)
+            elif suffix == '.py':
+                config_locals = OrderedDict()
+                exec_file(path, python_config_globals, config_locals)
+                return config_locals
+            else:
+                raise ConfigError('unknown config suffix: ' + suffix)
     raise ConfigError("can't find a config file, expected one of:\n" + '\n'.join(probe_file_names))
 
 
