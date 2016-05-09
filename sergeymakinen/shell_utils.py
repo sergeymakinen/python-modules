@@ -1,4 +1,5 @@
 import http.cookiejar
+import itertools
 import json
 import os
 import re
@@ -56,8 +57,8 @@ class ConfigError(Exception):
 
 def error(message, code=1):
     """
-    :param str message: message
-    :param int code: code
+    :param str message:
+    :param int code:
     """
 
     sys.stdout.flush()
@@ -66,6 +67,12 @@ def error(message, code=1):
 
 
 def exec_file(path, globals=None, locals=None):
+    """
+    :param str path:
+    :param dict globals:
+    :param dict locals:
+    """
+
     if globals is None:
         globals = sys._getframe(1).f_globals
     if locals is None:
@@ -76,9 +83,9 @@ def exec_file(path, globals=None, locals=None):
 
 def find_executable(name, shell=False):
     """
-    :param str name: name
-    :param bool shell: shell
-    :return str: str
+    :param str name:
+    :param bool shell:
+    :rtype: str
     """
 
     pathes = os.environ.get('PATH', os.defpath).split(os.pathsep)
@@ -101,8 +108,8 @@ def find_executable(name, shell=False):
 
 def format_size(size):
     """
-    :param float size: size
-    :return str: str
+    :param float size:
+    :rtype: str
     """
 
     size = float(size)
@@ -116,6 +123,12 @@ def format_size(size):
 
 
 def get_keychain_password(service, account):
+    """
+    :param str service:
+    :param str account:
+    :rtype: str
+    """
+
     output = subprocess.Popen(['security', 'find-generic-password', '-g', '-s', service, '-a', account],
                               universal_newlines=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[1]
@@ -133,12 +146,13 @@ def get_keychain_password(service, account):
 
 def import_config(file_name=None, suffix='.ini', osx_domain='ru.makinen', python_config_globals=None):
     """
-    :param str file_name: file_name
-    :param str suffix: suffix
-    :param str osx_domain: osx_domain
-    :param dict python_config_globals: python_config_globals
-    :return OrderedDict: OrderedDict
+    :param str file_name:
+    :param str suffix:
+    :param str osx_domain:
+    :param dict python_config_globals:
+    :rtype: OrderedDict
     """
+
     if file_name is None:
         if not hasattr(sys.modules['__main__'], '__file__'):
             raise ConfigError("can't guess a file_name parameter")
@@ -169,7 +183,9 @@ def import_config(file_name=None, suffix='.ini', osx_domain='ru.makinen', python
         if os.path.isfile(path):
             if suffix == '.ini':
                 parser = ConfigParser()
-                parser.read(path, 'utf-8')
+                parser.optionxform = str
+                with open(path, 'r', encoding='utf-8') as file_obj:
+                    parser.read_file(itertools.chain(['[__global__]'], file_obj))
                 return parser._sections
             elif suffix == '.json':
                 with open(path, 'r') as file_obj:
@@ -185,9 +201,9 @@ def import_config(file_name=None, suffix='.ini', osx_domain='ru.makinen', python
 
 def input_bool(question, default=None):
     """
-    :param str question: question
-    :param bool default: default
-    :return bool: bool
+    :param str question:
+    :param bool default:
+    :rtype: bool
     """
 
     if default is None:
@@ -210,9 +226,8 @@ def input_bool(question, default=None):
 
 def log(path, message):
     """
-    :param str path: path
-    :param str message: message
-    :return:
+    :param str path:
+    :param str message:
     """
 
     if os.path.isfile(path):
@@ -223,10 +238,10 @@ def log(path, message):
 
 def realpath(path, executable=False, shell=False):
     """
-    :param str path: path
-    :param bool executable: executable
-    :param bool shell: shell
-    :return str: str
+    :param str path:
+    :param bool executable:
+    :param bool shell:
+    :rtype: str
     """
 
     if executable:
@@ -244,16 +259,16 @@ def retrieve_file(url, file_path=None,
                   user_agent=None, cookies=None, referer=None, xhr=False, post_data=None,
                   include_metadata=False, encoding='utf-8'):
     """
-    :param str url: url
-    :param str file_path: file_path
-    :param str user_agent: user_agent
-    :param dict cookies: cookies
-    :param str referer: referer
-    :param bool xhr: xhr
-    :param dict|str post_data: post_data
-    :param bool include_metadata: include_metadata
-    :param str encoding: encoding
-    :return str|bytes|dict: str|bytes|dict
+    :param str url:
+    :param str file_path:
+    :param str user_agent:
+    :param dict cookies:
+    :param str referer:
+    :param bool xhr:
+    :param dict|str post_data:
+    :param bool include_metadata:
+    :param str encoding:
+    :rtype: str|bytes|dict
     """
 
     cookie_jar = http.cookiejar.CookieJar()
@@ -329,9 +344,9 @@ def retrieve_file(url, file_path=None,
 
 def safe_file_name(name, posix=None):
     """
-    :param str name: name
-    :param bool posix: posix
-    :return str: str
+    :param str name:
+    :param bool posix:
+    :rtype: str
     """
 
     if posix is None:
@@ -346,6 +361,14 @@ def safe_file_name(name, posix=None):
 
 
 def set_keychain_password(service, account, password, label=None, prompt=False):
+    """
+    :param str service:
+    :param str account:
+    :param str password:
+    :param str label:
+    :param bool prompt:
+    """
+
     if label is None:
         label = '{0} {1}'.format(service, account)
     cmd = ['security', 'add-generic-password', '-s', service, '-a', account, '-w', password, '-l', label]
@@ -356,9 +379,9 @@ def set_keychain_password(service, account, password, label=None, prompt=False):
 
 def set_time_tz(time, tz='local'):
     """
-    :param datetime time: time
-    :param str tz: tz
-    :return datetime: datetime
+    :param datetime time:
+    :param str tz:
+    :rtype: datetime
     """
 
     if time.utcoffset() is None:
@@ -374,10 +397,10 @@ def set_time_tz(time, tz='local'):
 
 def strftime(format, timestamp_or_datetime=None, tz='local'):
     """
-    :param str format: format
-    :param int|datetime timestamp_or_datetime: timestamp_or_datetime
-    :param str tz: tz
-    :return str: str
+    :param str format:
+    :param int|datetime timestamp_or_datetime:
+    :param str tz:
+    :rtype: str
     """
 
     if tz == 'local':
@@ -402,23 +425,26 @@ def strftime(format, timestamp_or_datetime=None, tz='local'):
 
 def strptime(format, string, tz='local'):
     """
-    :param str format: format
-    :param str string: string
+    :param str format:
+    :param str string:
     :param str tz: tz
-    :return datetime: datetime
+    :rtype: datetime
     """
 
     return set_time_tz(datetime.strptime(string, format), tz)
 
 
 def timestamp():
+    """
+    :rtype: int
+    """
     return timegm(gmtime())
 
 
 def touch(path, times=None):
     """
-    :param str path: path
-    :param tuple(float, float) times: times
+    :param str path:
+    :param tuple(float, float) times:
     """
 
     if not os.path.exists(path):
